@@ -1,0 +1,19 @@
+Simple base for analysing C source code symbols which might
+be useful in some cases where cscope(1) is not enough.
+
+Install
+=======
+
+Compile and install to $HOME:
+$ ./configure ~
+$ make
+$ make install
+
+Run
+===
+
+Show all function identifiers:
+$ canal <canal.c
+
+Show function identifiers called by main:
+$ canal follow main <canal.c
