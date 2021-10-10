@@ -142,7 +142,7 @@ static void
 check_follow(char *identifier)
 {
 	if (follow != NULL) {
-		if (follow_on == -1 &&
+		if (follow_on == -1 && depth == 0 &&
 		    strcmp(identifier, follow) == 0)
 			follow_on = depth;
 		else if (follow_on == depth &&
