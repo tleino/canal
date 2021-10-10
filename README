@@ -17,3 +17,6 @@ $ canal <canal.c
 
 Show function identifiers called by main:
 $ canal follow main <canal.c
+
+Recursively follow function identifiers called by main:
+$ ./follow.sh main
