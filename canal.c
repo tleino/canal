@@ -83,6 +83,33 @@ static size_t find_id(char *);
 static const char *id_as_str(size_t);
 static void check_follow(char *);
 
+static int
+has_id(char *identifier)
+{
+	size_t i;
+	static const size_t kw_arr_len = sizeof(keyword) / sizeof(keyword[0]);
+
+	for (i = 0; i < sizeof(keyword) / sizeof(keyword[0]); i++)
+		if (strcmp(identifier, keyword[i]) == 0)
+			return 1;
+
+	for (i = 0; i < n_identifiers; i++) {
+		if (strcmp(identifier, identifiers[i]) == 0)
+			return 1;
+	}
+	return 0;
+}
+
+void clear_ids()
+{
+	if (identifiers) {
+		free(identifiers);
+		identifiers = NULL;
+		alloc_identifiers = 0;
+	}
+	n_identifiers = 0;
+}
+
 static size_t
 find_id(char *identifier)
 {
@@ -134,7 +161,8 @@ usage(char *prog)
 {
 	fprintf(stderr,
 	    "usage: %s\n"
-	    "       %s follow FUNCTION\n", prog, prog);
+	    "       %s digraph\n"
+	    "       %s follow FUNCTION\n", prog, prog, prog);
 	return 1;
 }
 
@@ -157,9 +185,14 @@ main(int argc, char *argv[])
 {
 	char c;
 	int i;
+	int digraph_mode = 0;
+	const char *depth0_keyword = NULL;
+	int new_id;
 
 	if (argc >= 2) {
-		if (strcmp(argv[1], "follow") == 0) {
+		if (strcmp(argv[1], "digraph") == 0) {
+			digraph_mode = 1;
+		} else if (strcmp(argv[1], "follow") == 0) {
 			if (argc < 3)
 				return usage(argv[0]);
 			else
@@ -167,6 +200,9 @@ main(int argc, char *argv[])
 		} else
 			return usage(argv[0]);
 	}
+
+	if (digraph_mode)
+		printf("digraph {\n");
 
 	while ((c = getchar()) != EOF) {
 		if (col == 0 && c == '#')
@@ -220,6 +256,11 @@ main(int argc, char *argv[])
 			    (c >= 0 && c <= 9) || c == '_')) {
 				*p = '\0';
 
+				if (digraph_mode && depth == 0)
+					clear_ids();
+
+				new_id = !has_id(identifier);
+
 				identifier_no = find_id(identifier);
 #if 0
 				if (!is_keyword(identifier_no)) {
@@ -235,12 +276,18 @@ main(int argc, char *argv[])
 					if (follow == NULL ||
 					    (follow_on != -1 &&
 					    follow_on != depth)) {
-#if 1
-						printf("%d\t", line);
-						for (i = 0; i < depth; i++)
-							putchar('\t');
-#endif
-						puts(id_as_str(identifier_no));
+						if (digraph_mode) {
+							if (new_id && depth == 0) {
+								depth0_keyword = id_as_str(identifier_no);
+								printf("\t%s;\n", depth0_keyword);
+							} else if (new_id)
+								printf("\t%s -> %s;\n", depth0_keyword, id_as_str(identifier_no));
+						} else {
+							printf("%d\t", line);
+							for (i = 0; i < depth; i++)
+								putchar('\t');
+							puts(id_as_str(identifier_no));
+						}
 					}
 				}
 				state = STATE_ANY;
@@ -278,6 +325,9 @@ main(int argc, char *argv[])
 		} else
 			col++;
 	}
+
+	if (digraph_mode)
+		printf("}\n");
 
 #if 0
 	printf("n_identifiers: %d alloc_identifiers: %d (%lu bytes)\n",
