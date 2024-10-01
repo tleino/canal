@@ -134,7 +134,7 @@ usage(char *prog)
 {
 	fprintf(stderr,
 	    "usage: %s\n"
-	    "       %s follow FUNCTION", prog, prog);
+	    "       %s follow FUNCTION\n", prog, prog);
 	return 1;
 }
 
